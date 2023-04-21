@@ -12,6 +12,7 @@
 #include <variant>
 #include <string>
 #include <cstdlib>
+#include <iterator>
 
 using namespace std;
 
@@ -51,7 +52,8 @@ void MainMenu() {
 
 struct Workout {
 public:
-    time_t date;
+    int id;
+    string date;
     string workout_type;
     float difficulty;
     string comments;
@@ -59,11 +61,11 @@ public:
 
 
 struct Exercise {
-    public:
-        int id;
-        string name;
-        float effectiveness;
-        int workout_id;
+public:
+    int id;
+    string name;
+    float effectiveness;
+    int workout_id;
 };
 
 struct Set {
@@ -79,8 +81,12 @@ public:
 template <typename T>
 void PopulateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, float, string>>& constructor_vector) {
     sqlite3_stmt* stmt;
+    float float_holder;
+    string string_holder;
+    string blob_holder;
 
     string object_type_str = typeid(object_type).name();
+    constructor_vector.push_back(object_type_str.substr(7));
     string sql = "SELECT * from '" + object_type_str.substr(7) + "';";
 
     cout << sql << endl;
@@ -98,10 +104,7 @@ void PopulateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, fl
         for (int i = 0; i < ncols; i++) {
 
             int col_type = sqlite3_column_type(stmt, i);
-            cout << col_type << endl;
-            float float_holder;
-            string string_holder;
-            string blob_holder;
+
 
             switch (col_type) {
             case 1:
@@ -117,7 +120,7 @@ void PopulateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, fl
                 break;
             case 4:
                 cerr << "SQL_NULL" << endl;
-                break; 
+                break;
             case 5:
                 cerr << "SQL_BLOB" << endl;
                 break;
@@ -147,6 +150,57 @@ void printVectorVariantValues(vector<variant<int, float, string>> arg) {
     }
 }
 
+void createStructs(vector<variant<int, float, string>>& constructor_vector, vector<Workout>& workouts, vector<Set>& sets, vector<Exercise>& exercises) {
+    const auto first_val_ptr(get_if<string>(&constructor_vector.front()));
+
+    if (*first_val_ptr == "Workout") {
+        Workout a;
+
+        auto idPtr(get_if<int>(&constructor_vector[1]));
+        auto datePtr(get_if<string>(&constructor_vector[2]));
+        auto workoutPtr(get_if<string>(&constructor_vector[3]));
+        auto difficultyPtr(get_if<float>(&constructor_vector[4]));
+        auto commentsPtr(get_if<string>(&constructor_vector[5]));
+
+        a.id = *idPtr;
+        a.date = *datePtr;
+        a.workout_type = *workoutPtr;
+        a.difficulty = *difficultyPtr;
+        a.comments = *commentsPtr;
+
+    }
+
+    else if (*first_val_ptr == "Exercises") {
+        Exercise a;
+
+        auto idPtr(get_if<int>(&constructor_vector[1]));
+        auto namePtr(get_if<string>(&constructor_vector[2]));
+        auto effectivenessPtr(get_if<float>(&constructor_vector[3]));
+        auto workout_id_Ptr(get_if<int>(&constructor_vector[4]));
+
+        a.id = *idPtr;
+        a.name = *namePtr;
+        a.effectiveness = *effectivenessPtr;
+        a.workout_id = *workout_id_Ptr;
+    }
+
+    else if (*first_val_ptr == "Set") {
+        Set a;
+
+        auto idPtr(get_if<int>(&constructor_vector[1]));
+        auto weightPtr(get_if<int>(&constructor_vector[2]));
+        auto repsPtr(get_if<int>(&constructor_vector[3]));
+        auto rpePtr(get_if<int>(&constructor_vector[4]));
+        auto exercise_id_Ptr(get_if<int>(&constructor_vector[5]));
+
+        a.id = *idPtr;
+        a.weight = *weightPtr;
+        a.reps = *repsPtr;
+        a.RPE = *rpePtr;
+        a.exercise_id = *exercise_id_Ptr;
+    }
+}
+
 
 
 int main()
@@ -154,7 +208,6 @@ int main()
     sqlite3* db;
     string sql;
 
-    vector<int> row_counts;
     vector<Workout> workouts;
     vector<Set> sets;
     vector<Exercise> exercises;
@@ -168,11 +221,13 @@ int main()
 
     int rc = sqlite3_open("blood_and_guts.db", &db);
 
-    PopulateVector(exercise_type, rc, db, constructor_vector);
+    PopulateVector(workout_type, rc, db, constructor_vector);
  
     sqlite3_close(db);
 
     printVectorVariantValues(constructor_vector);
+    createStructs(constructor_vector, workouts, sets, exercises);
+
     return 0;
 };
 
