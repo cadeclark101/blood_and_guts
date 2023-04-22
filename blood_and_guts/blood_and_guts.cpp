@@ -38,18 +38,6 @@ void Clear()
     cout.flush();
 }
 
-void MainMenu() {
-    cout << "1. Add new workout.\n" << "2. View all workouts.\n" << "3. View workout statistics and progression.\n" << "4. Edit previous workouts.\n\n";
-    int choice;
-    cin >> choice;
-    switch (choice) {
-    case 1:
-        Clear();
-        cout << "Blah" << endl;
-        break;
-    }
-}
-
 struct Workout {
 public:
     int id;
@@ -79,7 +67,7 @@ public:
 };
 
 template <typename T>
-void PopulateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, float, string>>& constructor_vector) {
+void populateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, float, string>>& constructor_vector) {
     sqlite3_stmt* stmt;
     float float_holder;
     string string_holder;
@@ -88,8 +76,6 @@ void PopulateVector(T& object_type, int& rc, sqlite3* db, vector<variant<int, fl
     string object_type_str = typeid(object_type).name();
     constructor_vector.push_back(object_type_str.substr(7));
     string sql = "SELECT * from '" + object_type_str.substr(7) + "';";
-
-    cout << sql << endl;
 
     rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
 
@@ -153,6 +139,7 @@ void printVectorVariantValues(vector<variant<int, float, string>> arg) {
 void createStructs(vector<variant<int, float, string>>& constructor_vector, vector<Workout>& workouts, vector<Set>& sets, vector<Exercise>& exercises) {
     const auto first_val_ptr(get_if<string>(&constructor_vector.front()));
 
+
     if (*first_val_ptr == "Workout") {
         Workout a;
 
@@ -168,6 +155,7 @@ void createStructs(vector<variant<int, float, string>>& constructor_vector, vect
         a.difficulty = *difficultyPtr;
         a.comments = *commentsPtr;
 
+        workouts.push_back(a);
     }
 
     else if (*first_val_ptr == "Exercises") {
@@ -182,6 +170,8 @@ void createStructs(vector<variant<int, float, string>>& constructor_vector, vect
         a.name = *namePtr;
         a.effectiveness = *effectivenessPtr;
         a.workout_id = *workout_id_Ptr;
+
+        exercises.push_back(a);
     }
 
     else if (*first_val_ptr == "Set") {
@@ -198,9 +188,35 @@ void createStructs(vector<variant<int, float, string>>& constructor_vector, vect
         a.reps = *repsPtr;
         a.RPE = *rpePtr;
         a.exercise_id = *exercise_id_Ptr;
+
+        sets.push_back(a);
     }
 }
 
+void workoutMenu(vector<Workout>& workouts) {
+    cout << "\n---------------------------" << endl;
+    for (auto i : workouts)
+        cout <<"| " << i.id << " |  " << i.date << "    " << i.workout_type << "  " << i.difficulty << "  " << i.difficulty << "|" << endl;
+    cout << "---------------------------\n\n" << endl;
+
+    cout << "-------------------------------------------------------------------------" << endl;
+    cout << "   1. View a Workout.     " << "2. Add a Workout.     " << "3. Edit/Remove a Workout.     " << endl;
+}
+
+void MainMenu(vector<Workout>& workouts) {
+    cout <<  "1. Add new workout.\n" << "2. View all workouts.\n" << "3. View workout statistics and progression.\n" << "4. Edit previous workouts.\n\n";
+    int choice;
+    cin >> choice;
+    switch (choice) {
+    case 1:
+        Clear();
+        cout << "Blah" << endl;
+        break;
+    case 2:
+        Clear();
+        workoutMenu(workouts);
+    }
+}
 
 
 int main()
@@ -217,29 +233,25 @@ int main()
     Exercise exercise_type;
     Set set_type;
 
-    Clear();
-
     int rc = sqlite3_open("blood_and_guts.db", &db);
 
-    PopulateVector(workout_type, rc, db, constructor_vector);
+    populateVector(workout_type, rc, db, constructor_vector);
+    createStructs(constructor_vector, workouts, sets, exercises);
+    constructor_vector.clear();
+
+    populateVector(exercise_type, rc, db, constructor_vector);
+    createStructs(constructor_vector, workouts, sets, exercises);
+    constructor_vector.clear();
+
+    populateVector(set_type, rc, db, constructor_vector);
+    createStructs(constructor_vector, workouts, sets, exercises);
+    constructor_vector.clear();
+
  
     sqlite3_close(db);
 
-    printVectorVariantValues(constructor_vector);
-    createStructs(constructor_vector, workouts, sets, exercises);
+    Clear();
+    MainMenu(workouts);
 
     return 0;
 };
-
-
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

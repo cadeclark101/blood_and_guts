@@ -1,7 +1,6 @@
 ﻿  blood_and_guts.cpp
-C:\Users\cadec\Documents\blood_and_guts\blood_and_guts\blood_and_guts.cpp(218,9): warning C4101: 'set_type': unreferenced local variable
-C:\Users\cadec\Documents\blood_and_guts\blood_and_guts\blood_and_guts.cpp(114,53): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-C:\Users\cadec\Documents\blood_and_guts\blood_and_guts\blood_and_guts.cpp(224,60): message : see reference to function template instantiation 'void PopulateVector<Workout>(T &,int &,sqlite3 *,std::vector<std::variant<int,float,std::string>,std::allocator<std::variant<int,float,std::string>>> &)' being compiled
+C:\Users\cadec\Documents\blood_and_guts\blood_and_guts\blood_and_guts.cpp(100,53): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\cadec\Documents\blood_and_guts\blood_and_guts\blood_and_guts.cpp(238,60): message : see reference to function template instantiation 'void populateVector<Workout>(T &,int &,sqlite3 *,std::vector<std::variant<int,float,std::string>,std::allocator<std::variant<int,float,std::string>>> &)' being compiled
           with
           [
               T=Workout
